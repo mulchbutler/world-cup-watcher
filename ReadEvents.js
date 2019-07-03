@@ -28,11 +28,11 @@ const EventType = {
     CORNER_KICK: 16,
     BLOCKED_SHOT_2: 17,
     FOUL_AGAINST_PLAYER: 18,
-    UNKNOWN_19: 19,
+    UNKNOWN_19: 19, // Coin Flip
     UNKNOWN_20: 20,
     UNKNOWN_22: 22,
     UNKNOWN_23: 23,
-    UNKNOWN_24: 24, //Goalie catches? or out of bounds/throw?
+    OUT_OF_BOUNDS: 24, //Goalie catches? or out of bounds/throw?// out of bounds?
     MATCH_END: 26,
     UNKNOWN_27: 27, //Penalty kick?
     UNKNOWN_29: 29,
@@ -56,11 +56,13 @@ var getEventLine = function (current_match, player_list, event, onlyVitalMessage
     player = player_list[event.IdPlayer]
     sub_player = player_list[event.IdSubPlayer]
 
-    if (event.IdTeam == current_match.HomeTeam.IdTeam)
+    if (event.IdTeam == current_match.HomeTeam.IdTeam) {
         active_team = current_match.HomeTeam.TeamName[0].Description
-    else
+        sub_team = current_match.AwayTeam.TeamName[0].Description
+    } else {
         active_team = current_match.AwayTeam.TeamName[0].Description
-
+        sub_team = current_match.HomeTeam.TeamName[0].Description
+    }
     if (event.Type == EventType.GOAL_SCORED || event.Type == EventType.FREE_KICK_GOAL ||
         event.Type == EventType.FREE_KICK_GOAL) {
         event_message = util.format('%s GOOOOAL! %s %s:%s %s', event.MatchMinute, current_match.HomeTeam.TeamName[0].Description, event.HomeGoals, event.AwayGoals, current_match.AwayTeam.TeamName[0].Description)
@@ -83,14 +85,17 @@ var getEventLine = function (current_match, player_list, event, onlyVitalMessage
         period = ""
         if (event.Period == Period.FIRST_PERIOD) {
             event_message = util.format('The match between %s && %s has begun!', current_match.HomeTeam.TeamName[0].Description, current_match.AwayTeam.TeamName[0].Description)
-            exec('say y rueda la pelota', (err, stdout, stderr) => {});
-        } else if (event.Period == Period.SECOND_PERIOD)
+            exec('say y rueda la pelota', () => {});
+        } else if (event.Period == Period.SECOND_PERIOD) {
             event_message = util.format('The second half of the match between %s && %s has begun!', current_match.HomeTeam.TeamName[0].Description, current_match.AwayTeam.TeamName[0].Description)
-        else if (event.Period == Period.FIRST_EXTRA_TIME)
+            exec('say y rueda la pelota', () => {});
+        } else if (event.Period == Period.FIRST_EXTRA_TIME) {
             event_message = util.format('The first half of extra time between %s && %s has begun!', current_match.HomeTeam.TeamName[0].Description, current_match.AwayTeam.TeamName[0].Description)
-        else if (event.Period == Period.SECOND_EXTRA_TIME)
+            exec('say y rueda la pelota', () => {});
+        } else if (event.Period == Period.SECOND_EXTRA_TIME) {
             event_message = util.format('The second half of extra time between %s && %s has begun!', current_match.HomeTeam.TeamName[0].Description, current_match.AwayTeam.TeamName[0].Description)
-        else if (event.Period == Period.PENALTY_SHOOTOUT)
+            exec('say y rueda la pelota', () => {});
+        } else if (event.Period == Period.PENALTY_SHOOTOUT)
             event_message = util.format('The penalty shootout is starting between %s && %s!', current_match.HomeTeam.TeamName[0].Description, current_match.AwayTeam.TeamName[0].Description)
         else
             event_message = util.format('The match between %s && %s is starting again! %s', current_match.HomeTeam.TeamName[0].Description, current_match.AwayTeam.TeamName[0].Description,event.Period)
@@ -149,14 +154,25 @@ var getEventLine = function (current_match, player_list, event, onlyVitalMessage
             event_message += util.format('\n> %s fouled.', sub_player)
     } else if (event.Type == EventType.BLOCKED_SHOT && !onlyVitalMessages) {
         event_message = util.format('%s %s (%s) takes a shot...', event.MatchMinute, player, active_team)
-        if (sub_player)
-            event_message += util.format('\n> but %s manages to block it!', sub_player)
-        else
+        if (!sub_player)
             event_message += '\n> but they miss!'
+    } else if (event.Type == EventType.BLOCKED_SHOT_2 && !onlyVitalMessages) {
+        event_message = util.format('> but %s (%s) pulls off the save!', player, active_team)
     } else if (event.Type == EventType.CORNER_KICK && !onlyVitalMessages) {
         event_message = util.format('%s %s (%s) takes a corner kick', event.MatchMinute, player, active_team)
-    } else
+    } else if(event.Type == EventType.OUT_OF_BOUNDS) {
+        event_message = util.format('%s Out of bounds, %s gets the ball', event.MatchMinute, active_team)
+        if (player && sub_player)
+            event_message += util.format('\n> %s <- Player : Sub -> %s.', player, sub_player)
+        else if (player)
+            event_message += util.format('\n> %s <- Plsyer.', player)
+        else if (sub_player)
+            event_message += util.format('\n> %s <-Sub', sub_player)
+    } else {
         event_message = ""
+        event_message = `Unknown event ${event.Type}`
+        event_message += `\n> min: ${event.MatchMinute} player: ${player} active_team: ${active_team} sub_player: ${sub_player} sub_team: ${sub_team}`
+    }
 
 
     //BLOCKED_SHOT

@@ -178,18 +178,20 @@ matches = []
 events = []
 players = {}
 var seconds = 1,
-  event_interval = 10 * seconds * 1000,
+  event_interval = 10 * seconds ,
   match_interval = 60 * seconds * 1000;
 
 var getMatches = function () {
   rp({
-      uri: FIFA_URL + NOW_URL,
+      uri: FIFA_URL + ALL_URL,//NOW_URL,
       rejectUnauthorized: false,
       json: true
     })
     .then(response => {
       response.Results.forEach(match => {
-        if (match.IdCompetition == 17 && matches.indexOf(match) == -1 && match.IdMatch == '300331519') {
+        console.log(match)
+        console.log(match)
+        if (match.IdCompetition == 103 && matches.indexOf(match) == -1 && match.IdMatch == '300438261') {
           matches.push(match)
         }
       })

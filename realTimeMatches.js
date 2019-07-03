@@ -2,7 +2,6 @@ const rp = require('request-promise');
 const util = require('util');
 const eventLine = require('./ReadEvents');
 
-
 const FIFA_URL = 'https://api.fifa.com/api/v1'
 const NOW_URL = '/live/football/now'
 const ALL_URL = '/calendar/matches?idseason=254645&idcompetition=17&language=en-US'
@@ -10,10 +9,11 @@ const MATCH_EVENTS_URL = '/timelines/%s/%s/%s/%s?language=en-US' // IdCompetitio
 const MATCH_URL = '/live/football/%s/%s/%s/%s?language=en-US' // IdCompetition/IdSeason/IdStage/IdMatch
 
 matches = []
+ignoredMatches = []
 events = []
 players = {}
 var seconds = 1,
-    event_interval = 10 * seconds * 1000,
+    event_interval = 1 * seconds * 1000,
     match_interval = 60 * seconds * 1000;
 
 var getMatches = function () {
@@ -23,9 +23,15 @@ var getMatches = function () {
             json: true
         })
         .then(response => {
+            if (response.Results.length === 0) {
+                console.log(`No active matches found`)
+            } 
             response.Results.forEach(match => {
-                if (match.IdCompetition == 17 && matches.indexOf(match) == -1) {
+                if (match.IdCompetition == 103 && matches.indexOf(match) == -1) {
                     matches.push(match)
+                } else if (ignoredMatches.indexOf(match.IdCompetition) == -1) {
+                    console.log(`Unmatched Season ID: ${match.IdCompetition} Name: ${JSON.stringify(match.CompetitionName)}`)
+                    ignoredMatches.push(match.IdCompetition)
                 }
             })
         }).catch(err =>{
@@ -62,6 +68,7 @@ setInterval(function () {
             })
         }).catch(err =>{
             console.error('Glitch getting match info')
+            console.error(err)
         });
     })
 }, event_interval);
